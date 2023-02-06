@@ -9,6 +9,7 @@
 
 .pseudo-entry {
     display: flex;
+    align-items: center;
     justify-content: flex-start;
     padding: 5px 10px 5px 5px;
     gap: 3px;
@@ -36,7 +37,7 @@
 
 .entry:hover {
     cursor: pointer;
-    background-color: rgb(75, 75, 75);
+    background-color: var(--secondary-bg-color);
 }
 
 .entry:hover .entry-add-buttons{
@@ -53,7 +54,7 @@
     border: none;
     height: 30px;
     width: 100%;
-    font-size: 17px;
+    font-size: 15px;
 }
 
 .entry-input:focus {

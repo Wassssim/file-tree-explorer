@@ -1,7 +1,8 @@
 export interface ITreeNode {
-    id: number,
+    id: string,
     name: string,
-    type: "File" | "Folder",
+    isFolder: boolean,
     isOpen?: boolean,
+    visible?:boolean,
     children?: ITreeNode[]
 }
