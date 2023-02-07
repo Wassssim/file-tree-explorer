@@ -20,7 +20,7 @@
     /*border: 1px solid red;*/
 }
 
-.entry-add-buttons {
+.entry-buttons {
     display: flex;
     align-content: center;
     gap: 5px;
@@ -31,7 +31,7 @@
 }
 
 .icon-button:hover {
-    background-color: gray;
+    /*background-color: gray;*/
     border-radius: 50px;
 }
 
@@ -40,7 +40,7 @@
     background-color: var(--secondary-bg-color);
 }
 
-.entry:hover .entry-add-buttons{
+.entry:hover .entry-buttons{
     opacity: 100;
 }
 
@@ -52,6 +52,7 @@
 
 .entry-input {
     border: none;
+    margin:0;
     height: 30px;
     width: 100%;
     font-size: 15px;
