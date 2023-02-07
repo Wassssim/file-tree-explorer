@@ -1,3 +1,17 @@
 .App {
     padding: 1rem;
+    display: flex;
+    gap: 10px;
+    min-height: 95vh;
+}
+
+.App > :nth-child(1) {
+    min-width: 300px;
+    width: 15%;
+}
+
+.App > :nth-child(2) {
+    min-width: 300px;
+    border: 1px solid rgb(141, 141, 141);
+    width: 85%;
 }

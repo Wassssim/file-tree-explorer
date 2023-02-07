@@ -4,10 +4,11 @@ import Entry from '../Entry/Entry';
 import { ITreeNode } from '../../types/fileExplorerData';
 
 interface IFileExplorerProps {
-  initialTree: ITreeNode;
+  initialTree: ITreeNode,
+  onNodeSelect: (node: ITreeNode) => void
 }
 
-function FileExplorer({ initialTree }: IFileExplorerProps) {
+function FileExplorer({ initialTree, onNodeSelect }: IFileExplorerProps) {
   const [tree, setTree] = useState<ITreeNode>(initialTree);
 
   const addToTree = (tree: ITreeNode, folderId: string, node: ITreeNode): ITreeNode | null => {
@@ -47,6 +48,23 @@ function FileExplorer({ initialTree }: IFileExplorerProps) {
     return {...tree, children: newChildren}
   }
 
+  const renameNode = (tree: ITreeNode, nodeId: string, newName: string): ITreeNode => {
+    if (tree.id === nodeId)
+      return {...tree, name: newName}
+    
+    const newChildren = [];
+    for (const childNode of (tree.children || [])) {
+      const resultingTree = renameNode(childNode, nodeId, newName);
+      if (resultingTree)
+        newChildren.push(resultingTree);
+    }
+
+    if (newChildren.length > 0)
+      return {...tree, children: newChildren}
+    
+    return {...tree}
+  }
+
   const handleNodeAdd = (folderId: string, node: ITreeNode): void => {
     const newTree = addToTree(tree, folderId, node);
     if (newTree)
@@ -59,6 +77,12 @@ function FileExplorer({ initialTree }: IFileExplorerProps) {
       setTree(newTree);
   }
 
+  const handleNodeRename = (nodeId: string, newName: string): void => {
+    const newTree = renameNode(tree, nodeId, newName);
+    if (newTree)
+      setTree(newTree);    
+  }
+
   return (
     <div className='file-explorer'>
       <Entry 
@@ -66,6 +90,8 @@ function FileExplorer({ initialTree }: IFileExplorerProps) {
         depth={0} 
         onNodeAdd={handleNodeAdd} 
         onNodeDelete={handleNodeDelete}
+        onNodeRename={handleNodeRename}
+        onNodeSelect={onNodeSelect}
       />
     </div>
   )

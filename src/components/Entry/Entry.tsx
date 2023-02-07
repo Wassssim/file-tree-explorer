@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent  } from 'react';
+import { useState, KeyboardEvent, ChangeEvent } from 'react';
 import FolderIcon from '@mui/icons-material/Folder';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import NoteAddOutlinedIcon from '@mui/icons-material/NoteAddOutlined';
@@ -11,11 +11,13 @@ import './Entry.css';
 interface EntryProps {
 	node: ITreeNode,
 	depth: number,
-	onNodeAdd: (folderId: string, node: ITreeNode) => void
-	onNodeDelete: (nodeId: string) => void
+	onNodeAdd: (folderId: string, node: ITreeNode) => void,
+	onNodeDelete: (nodeId: string) => void,
+	onNodeRename: (nodeId: string, newName: string) => void
+	onNodeSelect: (node: ITreeNode) => void
 }
 
-export default function Entry({ node, depth, onNodeAdd, onNodeDelete }: EntryProps) {
+export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRename, onNodeSelect }: EntryProps) {
 	const [isOpen, setIsOpen] = useState<boolean>(false);
 	const [newNode, setNewNode] = useState<ITreeNode>({
 		id: "-1",
@@ -23,8 +25,10 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete }: EntryPro
 		isFolder: false,
 		name: ""
 	});
+	const [renamedNode, setRenamedNode] = useState<ITreeNode | null>(null);
 
 	const handleEntryClick = (e: any) => {
+		onNodeSelect(node);
 		setIsOpen(!isOpen);
 	}
 
@@ -40,10 +44,28 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete }: EntryPro
 			setIsOpen(true);
 	}
 
+	const handleNodeStartRename = (e: any) => {
+		e.stopPropagation();
+		setRenamedNode({
+			id: "-1",
+			name: node.name,
+			isFolder: node.isFolder,
+			visible: true
+		})
+	}
+
+	const handleNodeRename = (e: KeyboardEvent<HTMLInputElement>) => {
+		if ((e.key === "Enter") && (renamedNode?.name)) {
+			if (node.name !== renamedNode?.name)
+				onNodeRename(node.id, renamedNode?.name);
+			setRenamedNode(null);
+		}
+	}
+
 	const handleAddEntry = (e: KeyboardEvent<HTMLInputElement>) => {
 		if (e.key === "Enter") {
-			onNodeAdd(node.id, {...newNode, id: uuidv4()});
-			setNewNode({...node, visible: false, name: ""});
+			onNodeAdd(node.id, { ...newNode, id: uuidv4() });
+			setNewNode({ ...node, visible: false, name: "" });
 		}
 	}
 
@@ -62,10 +84,24 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete }: EntryPro
 			className="entry"
 		>
 			<div className='entry-name'>
-				{node.isFolder ? <FolderIcon /> : <InsertDriveFileIcon />} {node.name}
+				{node.isFolder ? <FolderIcon /> : <InsertDriveFileIcon />}
+				{renamedNode === null
+					?
+					<span onClick={handleNodeStartRename}>{node.name}</span>
+					:
+					<input
+						type ="text"
+						className='entry-input'
+						onBlur={(_) => setRenamedNode(null)}
+						onKeyUp={handleNodeRename}
+						value={renamedNode.name}
+						onChange={(e: ChangeEvent<HTMLInputElement>) => {setRenamedNode({...renamedNode, name: e.target.value})}}
+						autoFocus
+					/>
+				}
 			</div>
 			<div className='entry-buttons'>
-				{ node.isFolder && <>
+				{node.isFolder && <>
 					<span className='icon-button' onClick={(e) => handleNewEntry(e, false)}><NoteAddOutlinedIcon /></span>
 					<span><CreateNewFolderOutlinedIcon onClick={(e) => handleNewEntry(e, true)} /></span>
 				</>}
@@ -74,7 +110,17 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete }: EntryPro
 		</div>
 		<div style={{ paddingLeft: `${(depth + 1) * 10}px`, borderLeft: "1px solid var(--secondary-bg-color)", display: "flex", flexDirection: "column", alignContent: "flex-start" }}>
 			{isOpen
-				&& node.children?.map((childNode: ITreeNode) => <Entry key={childNode.id} node={childNode} depth={depth + 1} onNodeAdd={onNodeAdd} onNodeDelete={onNodeDelete}/>)
+				&& node.children?.map((childNode: ITreeNode) =>
+					<Entry 
+						key={childNode.id}
+						node={childNode}
+						depth={depth + 1}
+						onNodeAdd={onNodeAdd} 
+						onNodeDelete={onNodeDelete}
+						onNodeRename={onNodeRename}
+						onNodeSelect={onNodeSelect}
+					/>
+				)
 			}
 			{newNode.visible
 				&&
@@ -82,13 +128,14 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete }: EntryPro
 					{newNode.isFolder ? <FolderIcon /> : <InsertDriveFileIcon />}
 					<div className='entry-name'>
 						<input
+							type ="text"
 							className='entry-input'
 							onBlur={handleCancelAdd}
 							value={newNode.name}
 							onChange={handleInputChange}
 							onKeyUp={handleAddEntry}
 							autoFocus
-						/>	
+						/>
 					</div>
 				</div>
 			}
