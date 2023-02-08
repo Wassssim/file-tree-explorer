@@ -1,4 +1,4 @@
-import { useState, KeyboardEvent, ChangeEvent } from 'react';
+import { useState, KeyboardEvent, ChangeEvent, DragEvent } from 'react';
 import FolderIcon from '@mui/icons-material/Folder';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import NoteAddOutlinedIcon from '@mui/icons-material/NoteAddOutlined';
@@ -19,6 +19,8 @@ interface EntryProps {
 
 export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRename, onNodeSelect }: EntryProps) {
 	const [isOpen, setIsOpen] = useState<boolean>(false);
+	const [isDragged, setIsDragged] = useState<boolean>(false);
+	const [isDropzone, setIsDropzone] = useState<boolean>(false);
 	const [newNode, setNewNode] = useState<ITreeNode>({
 		id: "-1",
 		visible: false,
@@ -29,7 +31,8 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 
 	const handleEntryClick = (e: any) => {
 		onNodeSelect(node);
-		setIsOpen(!isOpen);
+		if (node.isFolder)
+			setIsOpen(!isOpen);
 	}
 
 	const handleNewEntry = (e: any, isFolder: boolean) => {
@@ -78,9 +81,51 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 		setNewNode({ ...newNode, name: e.target.value });
 	}
 
-	return <>
+	const handleOnDrag = (e: DragEvent<HTMLDivElement>) => {
+		e.stopPropagation();
+		e.dataTransfer.setData("node_id", node.id);
+		setIsDragged(true);
+		if (node.isFolder)
+			setIsOpen(false);
+		console.log("data has been set");
+	}
+	/* TODO: debounce on drag over*/
+	const handleOnDragOver = (e: DragEvent<HTMLDivElement>) => {
+		e.preventDefault();
+		e.stopPropagation();
+		console.log("drag over ", node.id)
+		if (!isDropzone && !isDragged && node.isFolder) {
+			setIsDropzone(true);
+		}
+	}
+
+	const handleOnDragLeave = (e: DragEvent<HTMLDivElement>) => {
+		e.preventDefault();
+		e.stopPropagation();
+		console.log("drag leave ", node.id);
+		if (isDropzone) {
+			setIsDropzone(false);
+		}
+	}
+
+	const handleOnDrop = (e: DragEvent<HTMLDivElement>) => {
+		e.preventDefault();
+		e.stopPropagation();
+		console.log("move this", e.dataTransfer.getData("node_id"));
+	}
+
+
+	return <div
+		onDragOver={handleOnDragOver}
+		onDragLeave={handleOnDragLeave}
+		onDrop={handleOnDrop}
+		className={isDropzone ? "entry-dropzone" : ""}
+	>
 		<div
+			draggable
 			onClick={handleEntryClick}
+			onDragStart={(e) => handleOnDrag(e)}
+			onDragEnd={(e) => setIsDragged(false)}
 			className="entry"
 		>
 			<div className='entry-name'>
@@ -90,12 +135,12 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 					<span onClick={handleNodeStartRename}>{node.name}</span>
 					:
 					<input
-						type ="text"
+						type="text"
 						className='entry-input'
 						onBlur={(_) => setRenamedNode(null)}
 						onKeyUp={handleNodeRename}
 						value={renamedNode.name}
-						onChange={(e: ChangeEvent<HTMLInputElement>) => {setRenamedNode({...renamedNode, name: e.target.value})}}
+						onChange={(e: ChangeEvent<HTMLInputElement>) => { setRenamedNode({ ...renamedNode, name: e.target.value }) }}
 						autoFocus
 					/>
 				}
@@ -111,11 +156,11 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 		<div style={{ paddingLeft: `${(depth + 1) * 10}px`, borderLeft: "1px solid var(--secondary-bg-color)", display: "flex", flexDirection: "column", alignContent: "flex-start" }}>
 			{isOpen
 				&& node.children?.map((childNode: ITreeNode) =>
-					<Entry 
+					<Entry
 						key={childNode.id}
 						node={childNode}
 						depth={depth + 1}
-						onNodeAdd={onNodeAdd} 
+						onNodeAdd={onNodeAdd}
 						onNodeDelete={onNodeDelete}
 						onNodeRename={onNodeRename}
 						onNodeSelect={onNodeSelect}
@@ -128,7 +173,7 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 					{newNode.isFolder ? <FolderIcon /> : <InsertDriveFileIcon />}
 					<div className='entry-name'>
 						<input
-							type ="text"
+							type="text"
 							className='entry-input'
 							onBlur={handleCancelAdd}
 							value={newNode.name}
@@ -140,5 +185,5 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 				</div>
 			}
 		</div>
-	</>
+	</div>
 }
