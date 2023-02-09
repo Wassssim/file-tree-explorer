@@ -5,7 +5,19 @@
     gap: 3px;
     width: 100%;
     user-select: none;
-    z-index: 1;
+}
+
+.entry-wrapper {
+    padding-right: 15px;
+    background-color: transparent;
+    outline-color: transparent;
+}
+
+.entry-dropzone {
+    background-color: var(--secondary-bg-color-lighter);
+    outline: 1px dashed rgb(146, 146, 146);
+    outline-offset: -1px;
+    transition: background-color 0.2s ease,  outline-color 0.2s ease;
 }
 
 .pseudo-entry {
@@ -19,6 +31,7 @@
 
 .entry > * {
     /*border: 1px solid red;*/
+    pointer-events: none;
 }
 
 .entry-buttons {
@@ -65,11 +78,4 @@
 
 .entry-input:focus {
     outline: none;
-}
-
-.entry-dropzone {
-    background-color: var(--secondary-bg-color-lighter);
-    outline: 1px dashed rgb(143, 143, 143);
-    outline-offset: -1px;
-    /*transition: border 0.10s ease-out;*/
 }

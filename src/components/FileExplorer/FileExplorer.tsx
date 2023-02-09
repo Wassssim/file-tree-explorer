@@ -2,7 +2,7 @@ import { useState } from 'react';
 import './FileExplorer.css';
 import Entry from '../Entry/Entry';
 import { ITreeNode } from '../../types/fileExplorerData';
-import { addToTree, removeFromTree, renameNode } from '../../algorithms/treeAlgorithms';
+import { addToTree, moveNode, removeFromTree, renameNode } from '../../algorithms/treeAlgorithms';
 
 interface IFileExplorerProps {
   initialTree: ITreeNode,
@@ -30,6 +30,14 @@ function FileExplorer({ initialTree, onNodeSelect }: IFileExplorerProps) {
       setTree(newTree);    
   }
 
+  const handleNodeMove = (sourceNodeId: string, parentDestinationNode: ITreeNode): void => {
+    const newTree = moveNode(tree, sourceNodeId, parentDestinationNode);
+    if (newTree)
+      setTree(newTree);    
+  }
+  
+
+
   return (
     <div className='file-explorer'>
       <Entry
@@ -39,6 +47,7 @@ function FileExplorer({ initialTree, onNodeSelect }: IFileExplorerProps) {
         onNodeAdd={handleNodeAdd} 
         onNodeDelete={handleNodeDelete}
         onNodeRename={handleNodeRename}
+        onNodeMove={handleNodeMove}
         onNodeSelect={onNodeSelect}
       />
     </div>

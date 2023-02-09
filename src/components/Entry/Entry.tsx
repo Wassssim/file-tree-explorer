@@ -14,10 +14,11 @@ interface EntryProps {
 	onNodeAdd: (folderId: string, node: ITreeNode) => void,
 	onNodeDelete: (nodeId: string) => void,
 	onNodeRename: (nodeId: string, newName: string) => void
+	onNodeMove: (sourceNode: string, parentDestinationNode: ITreeNode) => void
 	onNodeSelect: (node: ITreeNode) => void
 }
 
-export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRename, onNodeSelect }: EntryProps) {
+export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRename, onNodeMove, onNodeSelect }: EntryProps) {
 	const [isOpen, setIsOpen] = useState<boolean>(false);
 	const [isDragged, setIsDragged] = useState<boolean>(false);
 	const [isDropzone, setIsDropzone] = useState<boolean>(false);
@@ -82,25 +83,30 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 	}
 
 	const handleOnDrag = (e: DragEvent<HTMLDivElement>) => {
-		e.stopPropagation();
+		//e.stopPropagation();
 		e.dataTransfer.setData("node_id", node.id);
 		setIsDragged(true);
 		if (node.isFolder)
 			setIsOpen(false);
 		console.log("data has been set");
 	}
+
 	/* TODO: debounce on drag over*/
 	const handleOnDragOver = (e: DragEvent<HTMLDivElement>) => {
 		e.preventDefault();
+	}
+
+	const handleOnDragEnter = (e: DragEvent<HTMLDivElement>) => {
+		//e.preventDefault();
 		e.stopPropagation();
-		console.log("drag over ", node.id)
+		console.log("drag enter ", node.id)
 		if (!isDropzone && !isDragged && node.isFolder) {
 			setIsDropzone(true);
 		}
 	}
 
 	const handleOnDragLeave = (e: DragEvent<HTMLDivElement>) => {
-		e.preventDefault();
+		//e.preventDefault();
 		e.stopPropagation();
 		console.log("drag leave ", node.id);
 		if (isDropzone) {
@@ -108,24 +114,33 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 		}
 	}
 
+	// TODO: check if parent id is the same (to avoid dragging and dropping a folder in the same parent)
 	const handleOnDrop = (e: DragEvent<HTMLDivElement>) => {
 		e.preventDefault();
 		e.stopPropagation();
-		console.log("move this", e.dataTransfer.getData("node_id"));
+		console.log("dropped");
+
+		const draggedNodeId = e.dataTransfer.getData("node_id");
+		if (draggedNodeId !== node.id) {
+			onNodeMove(draggedNodeId, node);
+			setIsDropzone(false);
+			setIsOpen(true);
+		}
 	}
 
 
 	return <div
 		onDragOver={handleOnDragOver}
+		onDragEnter={handleOnDragEnter}
 		onDragLeave={handleOnDragLeave}
 		onDrop={handleOnDrop}
-		className={isDropzone ? "entry-dropzone" : ""}
+		className={"entry-wrapper " + (isDropzone ? "entry-dropzone" : "")}
 	>
 		<div
 			draggable
-			onClick={handleEntryClick}
 			onDragStart={(e) => handleOnDrag(e)}
 			onDragEnd={(e) => setIsDragged(false)}
+			onClick={handleEntryClick}
 			className="entry"
 		>
 			<div className='entry-name'>
@@ -163,6 +178,7 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 						onNodeAdd={onNodeAdd}
 						onNodeDelete={onNodeDelete}
 						onNodeRename={onNodeRename}
+						onNodeMove={onNodeMove}
 						onNodeSelect={onNodeSelect}
 					/>
 				)
