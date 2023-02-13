@@ -38,13 +38,14 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 
 	const handleNewEntry = (e: any, isFolder: boolean) => {
 		e.stopPropagation();
+		console.log("new entry")
 		setNewNode({
 			id: "-1",
 			name: "",
 			isFolder,
 			visible: true
 		});
-		if (!isOpen)
+		if (!isOpen && node.isFolder)
 			setIsOpen(true);
 	}
 
@@ -121,7 +122,7 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 		console.log("dropped");
 
 		const draggedNodeId = e.dataTransfer.getData("node_id");
-		if (draggedNodeId !== node.id) {
+		if ((node.isFolder) && (draggedNodeId !== node.id)) {
 			onNodeMove(draggedNodeId, node);
 			setIsDropzone(false);
 			setIsOpen(true);
@@ -143,7 +144,7 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 			onClick={handleEntryClick}
 			className="entry"
 		>
-			<div className='entry-name'>
+			<div className={`entry-name ${isDropzone ? "disabled": ""}`}>
 				{node.isFolder ? <FolderIcon /> : <InsertDriveFileIcon />}
 				{renamedNode === null
 					?
@@ -160,15 +161,15 @@ export default function Entry({ node, depth, onNodeAdd, onNodeDelete, onNodeRena
 					/>
 				}
 			</div>
-			<div className='entry-buttons'>
+			<div className={`entry-buttons ${isDropzone ? "disabled": ""}`}>
 				{node.isFolder && <>
 					<span className='icon-button' onClick={(e) => handleNewEntry(e, false)}><NoteAddOutlinedIcon /></span>
-					<span><CreateNewFolderOutlinedIcon onClick={(e) => handleNewEntry(e, true)} /></span>
+					<span className='icon-button' ><CreateNewFolderOutlinedIcon onClick={(e) => handleNewEntry(e, true)} /></span>
 				</>}
 				<span><DeleteIcon onClick={(e) => onNodeDelete(node.id)} /></span>
 			</div>
 		</div>
-		<div style={{ paddingLeft: `${(depth + 1) * 10}px`, borderLeft: "1px solid var(--secondary-bg-color)", display: "flex", flexDirection: "column", alignContent: "flex-start" }}>
+		<div style={{ paddingLeft: `15px`, borderLeft: "1px solid var(--secondary-bg-color)", display: "flex", flexDirection: "column", alignContent: "flex-start" }}>
 			{isOpen
 				&& node.children?.map((childNode: ITreeNode) =>
 					<Entry

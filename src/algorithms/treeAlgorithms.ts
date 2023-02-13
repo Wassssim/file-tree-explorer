@@ -1,27 +1,29 @@
 import { ITreeNode } from "../types/fileExplorerData";
 
 export const addToTree = (tree: ITreeNode | null, folderId: string, node: ITreeNode): ITreeNode | null => {
-    if (!tree)
+    if (!tree) {
         return {...node};
-    
-    if ((tree.isFolder === true) && (tree.id === folderId))
-        return { ...tree, children: [...(tree?.children || []), { ...node }] }
-
-    if (!tree.children)
-        return tree;
-
-    const newChildren = [];
-    for (const childNode of (tree.children || [])) {
-        const resultingTree = addToTree(childNode, folderId, node);
-        if (resultingTree)
-            newChildren.push(resultingTree);
     }
 
-    if (newChildren.length > 0)
-        return { ...tree, children: [...newChildren] }
+    if (tree.isFolder && tree.id === folderId) {
+        tree.children = [...(tree.children || []), { ...node }];
+        return tree;
+    }
+
+    if (!tree.children) {
+        return tree;
+    }
+
+    for (const childNode of tree.children) {
+        const newChild: ITreeNode | null = addToTree(childNode, folderId, node);
+        if ((newChild !== childNode) && (newChild)) {
+            childNode.children = newChild.children;
+            break;
+        }
+    }
 
     return tree;
-}
+};
 
 export const removeFromTree = (tree: ITreeNode | null, nodeId: string, recursive: boolean = false): ITreeNode | null => {
     if (!tree)
